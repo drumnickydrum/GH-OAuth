@@ -32,14 +32,11 @@ module.exports.axios = {
       },
     }),
 
-  getUserRepos: (username, accessToken) =>
-    axios.get(`https://api.github.com/users/${username}/repos`, {
+  getUserRepos: (accessToken) =>
+    axios.get(`https://api.github.com/user/repos`, {
       headers: {
         Authorization: `bearer ${accessToken}`,
         Accept: 'application/vnd.github.v3+json',
-      },
-      params: {
-        type: 'all',
       },
     }),
 };
