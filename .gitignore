@@ -34,3 +34,4 @@
 /server/.env
 /server/badges/*
 !/server/badges/*.svg
+!/server/badges/*.js

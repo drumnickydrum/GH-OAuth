@@ -1,5 +1,5 @@
 const path = require('path');
-const generateBadge = require('../badges/generateBadge');
+const generateBadge = require('../badges/generate');
 const { axios } = require('../requests');
 const router = require('express').Router();
 
