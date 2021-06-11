@@ -32,3 +32,5 @@
 
 # misc
 /server/.env
+/server/badges/*
+!/server/badges/*.svg

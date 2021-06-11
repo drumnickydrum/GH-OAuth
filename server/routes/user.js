@@ -6,7 +6,8 @@ const router = require('express').Router();
 router.route('/repos').get(ensureAuthenticated, getUserRepos);
 module.exports = router;
 
-const PENDING_BADGE_URL = '/badges/pending.svg';
+const BADGES_URL = '/badges';
+const PENDING_BADGE_URL = path.join(BADGES_URL, 'pending.svg');
 
 async function ensureAuthenticated(req, res, next) {
   const accessToken = req.signedCookies?.ght;
@@ -32,6 +33,7 @@ async function getUserRepos(req, res) {
     repos = repos.map((repo) => [
       repo.id,
       {
+        id: repo.id,
         name: repo.name,
         htmlURL: repo.html_url,
         cloneURL: repo.clone_url,
@@ -74,7 +76,7 @@ async function getBadges({ user: { id: userId }, repos }) {
     badges.forEach((badge) => {
       let filepath;
       if (badge.filename.match(/pending/)) filepath = PENDING_BADGE_URL;
-      else filepath = path.join('/badges', String(userId), badge.filename);
+      else filepath = path.join(BADGES_URL, String(userId), badge.filename);
       repos[badge.repoId].badgeURL = filepath;
     });
   } catch (e) {
