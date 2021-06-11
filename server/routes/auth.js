@@ -23,8 +23,7 @@ async function oAuthCallback(req, res) {
   }
   res.clearCookie('ghState');
   try {
-    const response = await axios.getToken(code);
-    const accessToken = response.data?.access_token;
+    const accessToken = await axios.getToken(code);
     if (!accessToken) return res.redirect(`${process.env.CLIENT_URL}/login`);
     res.cookie('ght', accessToken, {
       signed: true,

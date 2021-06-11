@@ -13,8 +13,7 @@ async function ensureAuthenticated(req, res, next) {
   const accessToken = req.signedCookies?.ght;
   if (!accessToken) return res.redirect(`${process.env.CLIENT_URL}/login`);
   try {
-    const response = await axios.getUserProfile(accessToken);
-    const user = response?.data;
+    const user = await axios.getUserProfile(accessToken);
     if (!user) throw new Error('error fetching user');
     req.user = { id: user.id, username: user.login, accessToken };
     next();
@@ -25,10 +24,14 @@ async function ensureAuthenticated(req, res, next) {
 }
 
 async function getUserRepos(req, res) {
-  const payload = { user: { id: req.user.id, username: req.user.username } };
+  const payload = {
+    user: {
+      id: req.user.id,
+      username: req.user.username,
+    },
+  };
   try {
-    const response = await axios.getUserRepos(req.user.accessToken);
-    let repos = response?.data;
+    let repos = await axios.getUserRepos(req.user.accessToken);
     if (!repos) throw new Error('error fetching repos');
     repos = repos.map((repo) => [
       repo.id,
@@ -68,9 +71,8 @@ async function getBadges({ user: { id: userId }, repos }) {
   try {
     let promises = [];
     for (let [repoId, { score }] of Object.entries(repos)) {
-      if (score !== 'pending') {
-        promises.push(generateBadge({ userId, repoId, score }));
-      }
+      if (score === 'pending') continue;
+      promises.push(generateBadge({ userId, repoId, score }));
     }
     const badges = await Promise.all(promises);
     badges.forEach((badge) => {
