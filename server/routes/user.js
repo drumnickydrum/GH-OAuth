@@ -1,11 +1,12 @@
 const path = require('path');
+const generateBadge = require('../badges/generateBadge');
 const { axios } = require('../requests');
 const router = require('express').Router();
 
 router.route('/repos').get(ensureAuthenticated, getUserRepos);
 module.exports = router;
 
-const BADGES_URL = path.join(__dirname, 'badges');
+const PENDING_BADGE_URL = '/badges/pending.svg';
 
 async function ensureAuthenticated(req, res, next) {
   const accessToken = req.signedCookies?.ght;
@@ -14,7 +15,7 @@ async function ensureAuthenticated(req, res, next) {
     const response = await axios.getUserProfile(accessToken);
     const user = response?.data;
     if (!user) throw new Error('error fetching user');
-    req.user = { id: user.id, name: user.name, accessToken };
+    req.user = { id: user.id, username: user.login, accessToken };
     next();
   } catch (e) {
     console.log('ensureAuthenticated ->', e.message || e.response?.data?.message);
@@ -23,23 +24,26 @@ async function ensureAuthenticated(req, res, next) {
 }
 
 async function getUserRepos(req, res) {
-  const payload = { user: { id: req.user.id, name: req.user.name } };
+  const payload = { user: { id: req.user.id, username: req.user.username } };
   try {
     const response = await axios.getUserRepos(req.user.accessToken);
     let repos = response?.data;
     if (!repos) throw new Error('error fetching repos');
-    repos = repos.map((repo) => ({
-      id: repo.id,
-      name: repo.name,
-      htmlURL: repo.html_url,
-      cloneURL: repo.clone_url,
-      lastUpdated: repo.pushed_at,
-      percentComplete: 0,
-      score: 'pending',
-      badgeURL: `${BADGES_URL}/pending.svg`,
-    }));
-    await getScores(repos, payload);
-    await getBadges(repos, payload);
+    repos = repos.map((repo) => [
+      repo.id,
+      {
+        name: repo.name,
+        htmlURL: repo.html_url,
+        cloneURL: repo.clone_url,
+        lastUpdated: repo.pushed_at,
+        percentComplete: 0,
+        score: 'pending',
+        badgeURL: PENDING_BADGE_URL,
+      },
+    ]);
+    payload.repos = Object.fromEntries(repos);
+    await getScores(payload);
+    await getBadges(payload);
     return res.json(payload);
   } catch (e) {
     console.log('/user/repos ->', e.message || e.response?.data?.message);
@@ -47,10 +51,33 @@ async function getUserRepos(req, res) {
   }
 }
 
-async function getScores() {
-  console.log('getScores');
+async function getScores(payload) {
+  try {
+    Object.values(payload.repos).forEach((repo) => {
+      repo.percentComplete = 100;
+      repo.score = Math.floor(Math.random() * 100);
+    });
+  } catch (e) {
+    console.log('error retrieving scores');
+  }
 }
 
-async function getBadges() {
-  console.log('getBadges');
+async function getBadges({ user: { id: userId }, repos }) {
+  try {
+    let promises = [];
+    for (let [repoId, { score }] of Object.entries(repos)) {
+      if (score !== 'pending') {
+        promises.push(generateBadge({ userId, repoId, score }));
+      }
+    }
+    const badges = await Promise.all(promises);
+    badges.forEach((badge) => {
+      let filepath;
+      if (badge.filename.match(/pending/)) filepath = PENDING_BADGE_URL;
+      else filepath = path.join('/badges', String(userId), badge.filename);
+      repos[badge.repoId].badgeURL = filepath;
+    });
+  } catch (e) {
+    console.log('error retrieving badges');
+  }
 }
