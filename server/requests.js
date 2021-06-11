@@ -1,10 +1,10 @@
 const axios = require('axios');
 
-// Authorization Request URL (Will return 'code' for exchange and 'state' for verification)
+const GH_SCOPE = 'read%3Auser%20repo';
 module.exports.getAuthURL = (state) =>
   `https://github.com/login/oauth/authorize?\
-client_id=0oaxebd0w120PQAvr5d6&\
-scope=read%3Auser%20repo&\
+client_id=${process.env.GH_CLIENT_ID}&\
+scope=${GH_SCOPE}&\
 state=${state}`;
 
 module.exports.axios = {
@@ -12,22 +12,31 @@ module.exports.axios = {
     axios.post(
       'https://github.com/login/oauth/access_token',
       {
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
+        client_id: process.env.GH_CLIENT_ID,
+        client_secret: process.env.GH_CLIENT_SECRET,
         code,
       },
       {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
       }
     ),
 
+  getUserProfile: (accessToken) =>
+    axios.get('https://api.github.com/user', {
+      headers: {
+        Authorization: `bearer ${accessToken}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    }),
+
   getUserRepos: (username, accessToken) =>
     axios.get(`https://api.github.com/users/${username}/repos`, {
       headers: {
-        authorization: `bearer ${accessToken}`,
-        accept: 'application/vnd.github.v3+json',
+        Authorization: `bearer ${accessToken}`,
+        Accept: 'application/vnd.github.v3+json',
       },
       params: {
         type: 'all',
