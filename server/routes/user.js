@@ -16,7 +16,7 @@ module.exports = router;
 
 async function ensureAuthenticated(req, res, next) {
   const accessToken = req.signedCookies?.ght;
-  if (!accessToken) return res.redirect(`${process.env.CLIENT_URL}/login`);
+  if (!accessToken) throw new Error('no access token');
   const uid = req.signedCookies?.uid;
   const dbUser = db.users[uid];
   if (dbUser) {
