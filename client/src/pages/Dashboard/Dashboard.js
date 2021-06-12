@@ -18,7 +18,7 @@ import ForkIcon from '@material-ui/icons/CallSplit';
 import WatchersIcon from '@material-ui/icons/Visibility';
 import { useEffect, useState } from 'react';
 import useStyles from './Dashboard.styles';
-import { copyToClipboard } from './utils/copyToClipboard';
+import { copyToClipboard } from '../../utils/copyToClipboard';
 
 const INITIAL_USERNAME = '';
 const INITIAL_AVATAR = '';
@@ -98,6 +98,7 @@ const Repo = ({ repo }) => {
               aria-label={`Go to ${repo.name} repository on GithHub`}
               onClick={(e) => e.stopPropagation()}
               onFocus={(e) => e.stopPropagation()}
+              className={classes.repoLink}
             >
               <Typography variant='body1' align='center'>
                 {repo.name}

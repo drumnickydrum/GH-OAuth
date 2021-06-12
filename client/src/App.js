@@ -1,8 +1,8 @@
 import { Container, createMuiTheme, CssBaseline, ThemeProvider } from '@material-ui/core';
 import { indigo } from '@material-ui/core/colors';
 import { BrowserRouter, Route } from 'react-router-dom';
-import { Dashboard } from './Dashboard';
-import { Login } from './Login';
+import { Dashboard } from './pages/Dashboard/Dashboard';
+import { Login } from './pages/Login/Login';
 
 const theme = createMuiTheme({
   palette: {

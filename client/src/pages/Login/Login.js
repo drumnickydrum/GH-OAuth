@@ -1,5 +1,5 @@
 import { Container, Card, Typography, Button, Icon } from '@material-ui/core';
-import GitHubIcon from './icons/github.svg';
+import GitHubIcon from '../../icons/github.svg';
 import useStyles from './Login.styles';
 
 export const Login = () => {

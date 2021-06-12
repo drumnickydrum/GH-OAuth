@@ -1,14 +1,14 @@
 export const copyToClipboard = (text) => {
   try {
     const dummy = document.createElement('input');
+    dummy.id = 'dummyForCopy';
     dummy.value = text;
-    dummy.style = 'display:none;';
+    dummy.style = 'transform:scale(0);';
     document.body.append(dummy);
-    console.log(dummy.value);
     dummy.select();
     dummy.setSelectionRange(0, 99999); /* For mobile devices */
     document.execCommand('copy');
-    console.log('text copied to clipboard');
+    document.getElementById('dummyForCopy').remove();
   } catch (e) {
     console.error('copyToClipboard error -> ', e);
   }

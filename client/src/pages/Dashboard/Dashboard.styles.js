@@ -32,6 +32,24 @@ const useStyles = makeStyles((theme) => ({
       alginItems: 'center',
     },
   },
+  repoLink: {
+    textDecoration: 'none',
+    '&:hover': {
+      textDecoration: 'underline',
+    },
+  },
+  badge: {
+    display: 'flex',
+    alignItems: 'center',
+    width: '112px',
+    height: '20px',
+    cursor: 'pointer',
+    margin: '.5rem auto',
+    border: '1px solid rgba(0,0,0,0)',
+    '&:hover': {
+      borderColor: ' white',
+    },
+  },
   accordionDetails: {
     flexDirection: 'column',
     '& .MuiTypography-body2': {
@@ -50,14 +68,6 @@ const useStyles = makeStyles((theme) => ({
   private: {
     fontWeight: 'bold',
     color: theme.palette.warning.main,
-  },
-  badge: {
-    display: 'flex',
-    alignItems: 'center',
-    width: '112px',
-    height: '20px',
-    cursor: 'pointer',
-    margin: '.5rem auto',
   },
 }));
 
