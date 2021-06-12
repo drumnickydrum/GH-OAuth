@@ -2,6 +2,7 @@ export const copyToClipboard = (text) => {
   try {
     const dummy = document.createElement('input');
     dummy.value = text;
+    dummy.style = 'display:none;';
     document.body.append(dummy);
     console.log(dummy.value);
     dummy.select();

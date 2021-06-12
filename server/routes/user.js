@@ -3,8 +3,11 @@ const generateBadge = require('../badges/generate');
 const { axios } = require('../requests');
 const router = require('express').Router();
 
-router.route('/repos').get(ensureAuthenticated, getUserRepos);
+router.route('/repos').get(ensureAuthenticated, getUserReposFromDB, getUserRepos);
+router.route('/logout').get(logoutUser);
 module.exports = router;
+
+let db = { users: {}, repos: {} };
 
 const BADGES_URL = '/badges';
 const PENDING_BADGE_URL = path.join(BADGES_URL, 'pending.svg');
@@ -12,10 +15,29 @@ const PENDING_BADGE_URL = path.join(BADGES_URL, 'pending.svg');
 async function ensureAuthenticated(req, res, next) {
   const accessToken = req.signedCookies?.ght;
   if (!accessToken) return res.redirect(`${process.env.CLIENT_URL}/login`);
+  const uid = req.signedCookies?.uid;
+  const dbUser = db.users[uid];
+  if (dbUser) {
+    req.user = {
+      id: dbUser.id,
+      username: dbUser.username,
+      avatar: dbUser.avatar,
+      accessToken,
+    };
+    return next();
+  }
   try {
+    console.log('hitting gh for user');
     const user = await axios.getUserProfile(accessToken);
     if (!user) throw new Error('error fetching user');
-    req.user = { id: user.id, username: user.login, accessToken };
+    db.users[user.id] = { id: user.id, username: user.login, avatar: user.avatar_url };
+    req.user = { ...db.users[user.id], accessToken };
+    res.cookie('uid', user.id, {
+      signed: true,
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      //   // secure: true // in production
+    });
     next();
   } catch (e) {
     console.log('ensureAuthenticated ->', e.message || e.response?.data?.message);
@@ -28,9 +50,11 @@ async function getUserRepos(req, res) {
     user: {
       id: req.user.id,
       username: req.user.username,
+      avatar: req.user.avatar,
     },
   };
   try {
+    console.log('hitting gh for repos');
     let repos = await axios.getUserRepos(req.user.accessToken);
     if (!repos) throw new Error('error fetching repos');
     repos = repos.map((repo) => [
@@ -38,6 +62,13 @@ async function getUserRepos(req, res) {
       {
         id: repo.id,
         name: repo.name,
+        description: repo.description,
+        private: repo.private,
+        language: repo.language,
+        stargazers: repo.stargazers_count,
+        forks: repo.forks_count,
+        watchers: repo.watchers_count,
+        issues: repo.open_issues_count,
         htmlURL: repo.html_url,
         cloneURL: repo.clone_url,
         lastUpdated: repo.pushed_at,
@@ -49,6 +80,7 @@ async function getUserRepos(req, res) {
     payload.repos = Object.fromEntries(repos);
     await getScores(payload);
     await getBadges(payload);
+    setUserReposToDB(payload);
     return res.json(payload);
   } catch (e) {
     console.log('/user/repos ->', e.message || e.response?.data?.message);
@@ -84,4 +116,19 @@ async function getBadges({ user: { id: userId }, repos }) {
   } catch (e) {
     console.log('error retrieving badges');
   }
+}
+
+function logoutUser(req, res, next) {
+  res.clearCookie('ght');
+  res.clearCookie('uid');
+  return res.redirect(`${process.env.CLIENT_URL}/login`);
+}
+
+function getUserReposFromDB(req, res, next) {
+  if (db.repos[req.user.id]) return res.json(db.repos[req.user.id]);
+  else next();
+}
+
+function setUserReposToDB(payload) {
+  db.repos[payload.user.id] = payload;
 }
