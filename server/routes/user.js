@@ -15,20 +15,20 @@ router.route('/logout').get(logoutUser);
 module.exports = router;
 
 async function ensureAuthenticated(req, res, next) {
-  const accessToken = req.signedCookies?.ght;
-  if (!accessToken) throw new Error('no access token');
-  const uid = req.signedCookies?.uid;
-  const dbUser = db.users[uid];
-  if (dbUser) {
-    req.user = {
-      id: dbUser.id,
-      username: dbUser.username,
-      avatar: dbUser.avatar,
-      accessToken,
-    };
-    return next();
-  }
   try {
+    const accessToken = req.signedCookies?.ght;
+    if (!accessToken) throw new Error('no access token');
+    const uid = req.signedCookies?.uid;
+    const dbUser = db.users[uid];
+    if (dbUser) {
+      req.user = {
+        id: dbUser.id,
+        username: dbUser.username,
+        avatar: dbUser.avatar,
+        accessToken,
+      };
+      return next();
+    }
     const user = await axios.getUserProfile(accessToken);
     if (!user) throw new Error('error fetching user');
     req.user = { id: user.id, username: user.login, avatar: user.avatar_url };
