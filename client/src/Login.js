@@ -5,12 +5,6 @@ import useStyles from './Login.styles';
 export const Login = () => {
   const signIn = () => (window.location.href = '/api/auth');
 
-  const svgIcon = (
-    <Icon>
-      <img alt='edit' src={GitHubIcon} />
-    </Icon>
-  );
-
   const classes = useStyles();
   return (
     <Container className={classes.root}>
@@ -25,3 +19,9 @@ export const Login = () => {
     </Container>
   );
 };
+
+const svgIcon = (
+  <Icon>
+    <img alt='edit' src={GitHubIcon} />
+  </Icon>
+);

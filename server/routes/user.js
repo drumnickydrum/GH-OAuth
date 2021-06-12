@@ -3,6 +3,11 @@ const generateBadge = require('../badges/generate');
 const { axios } = require('../requests');
 const router = require('express').Router();
 
+router
+  .route('/')
+  .get(ensureAuthenticated, (req, res) =>
+    res.redirect(`${process.env.CLIENT_URL}/dashboard`)
+  );
 router.route('/repos').get(ensureAuthenticated, getUserReposFromDB, getUserRepos);
 router.route('/logout').get(logoutUser);
 module.exports = router;
@@ -27,7 +32,6 @@ async function ensureAuthenticated(req, res, next) {
     return next();
   }
   try {
-    console.log('hitting gh for user');
     const user = await axios.getUserProfile(accessToken);
     if (!user) throw new Error('error fetching user');
     db.users[user.id] = { id: user.id, username: user.login, avatar: user.avatar_url };
@@ -54,7 +58,6 @@ async function getUserRepos(req, res) {
     },
   };
   try {
-    console.log('hitting gh for repos');
     let repos = await axios.getUserRepos(req.user.accessToken);
     if (!repos) throw new Error('error fetching repos');
     repos = repos.map((repo) => [
